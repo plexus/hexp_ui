@@ -1,0 +1,3 @@
+module HexpUI
+  VERSION='0.0.1'
+end
