@@ -16,6 +16,11 @@ get '/' do
   SearchForm.new(action: '/foo').to_html
 end
 
+post '/foo' do
+  # Only keep parameters of fields that exist
+  filtered_params = SearchForm.new.filter(params)
+end
+
 # <form class="search_form form widget">
 #   <div class="form-element">
 #     <label for="query">Search</label><input type="text" value="" name="query">
