@@ -4,6 +4,8 @@
 
 ## Examples
 
+The form builder :
+
 ```ruby
 SearchForm = HexpUI::Form.build do
   textfield :query, title: "Search"
@@ -11,7 +13,7 @@ SearchForm = HexpUI::Form.build do
 end
 
 get '/' do
-  SearchForm.new.to_html
+  SearchForm.new(action: '/foo').to_html
 end
 
 # <form class="search_form form widget">
@@ -22,9 +24,12 @@ end
 # </form>
 ```
 
+Basic widget, classes are set automatically
+
 ```ruby
 class HomeLink < Widget
-  def initialize(title = "Home")
+  def initialize(title = "Home", options = {})
+    super options
     @title = title
   end
 
@@ -34,6 +39,18 @@ class HomeLink < Widget
 end
 
 HomeLink.new('Go Home').to_html # => <a href="/" class="home_link widget">Go Home!</a>
+```
+
+Container widgets : use the `Container[]` style constructor, and the `contents` method :
+
+```ruby
+class List < Widget
+  template do
+    H[:ul, Array(contents).map {|entry| H[:li, entry]}]
+  end
+end
+
+List['one', 'two', 'three'].to_html
 ```
 
 MIT License.
