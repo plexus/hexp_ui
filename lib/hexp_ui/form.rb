@@ -1,50 +1,64 @@
 module HexpUI
   class Form < Widget
 
+    DEFAULT_OPTIONS = {
+      method: 'POST',
+      :'accept-charset' => 'UTF-8'
+    }.freeze
+
     class << self
       attr_accessor :elements
 
       def build(&blk)
         raise unless blk
-        FormBuilder.new(&blk).form_class
+        FormBuilder.new(self, &blk).form_class
       end
     end
 
     attr_reader :values
 
-    def initialize(model_or_params = nil)
-      @values = Hash[
-        self.class.elements.map do |type, name, opts|
-          if model_or_params
-            value = model_or_params[name]
-            options = element_opts(name)
-            if options
-              value = nil
-              options.each do |option_value, text|
-                if option_value.to_s == model_or_params[name].to_s
-                  value = option_value
-                  break
-                end
-              end
+    def initialize(options = {})
+      super DEFAULT_OPTIONS.merge(options)
+      @values = element_values
+    end
+
+    def filter(model_or_params)
+      elements.each do |_, name, _|
+        @values[name] = model_or_params[name] if model_or_params[name]
+      end
+      @values
+    end
+
+    def elements
+      self.class.elements
+    end
+
+    def element_values
+      {}.tap do |values|
+        elements.each do |_, name, _|
+          if options = element_opts(name) && options.has_key?(:value)
+            if options[:value].respond_to? :call
+              values[name] = options[:value].call
+            else
+              values[name] = options[:value]
             end
           end
-          [name, value]
         end
-      ]
+      end
     end
 
     def element_opts(element_name)
-      self.class.elements.select do |type, name, opts|
+      elements.select do |type, name, opts|
         element_name == name
       end[2]
     end
 
     template do
-      H[:form, elements]
+      H[:form, render_elements]
     end
 
-    def elements
-      self.class.elements.map do |type, name, opts|
+    def render_elements
+      elements.map do |type, name, opts|
         H[:div, {class: 'form-element'}, self.send(type, name, opts)]
       end
     end
@@ -64,6 +78,10 @@ module HexpUI
       H[:input, type: 'submit', value: name]
     end
 
+    def hidden(name, opts)
+      H[:input, type: 'hidden', value: @values[name]]
+    end
+
     private
 
     def select_option(name, value, text)
@@ -75,7 +93,7 @@ module HexpUI
 
   class FormAspects < Aspector::Base
     HAS_LABEL = [:select, :textfield]
-    HAS_NAME  = [:select, :textfield]
+    HAS_NAME  = [:select, :textfield, :hidden]
 
     around HAS_LABEL do |proxy, name, opts|
       [

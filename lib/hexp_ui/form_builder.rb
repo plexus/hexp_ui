@@ -6,12 +6,17 @@ module HexpUI
     #   password password_confirm radio radios select tableselect text_format
     #   textarea textfield vertical_tabs weight].map(&:to_sym)
 
-    TYPES = %w[select textfield submit].map(&:to_sym)
+    TYPES = %w[select textfield hidden submit].map(&:to_sym)
 
-    attr_reader :elements
+    attr_reader :elements, :parent_class
 
-    def initialize(&blk)
-      @elements = []
+    def initialize(parent_class, &blk)
+      @parent_class = parent_class
+      if parent_class.respond_to? :elements
+        @elements = Array(parent_class.elements)
+      else
+        @elements = []
+      end
       instance_eval(&blk)
     end
 
@@ -22,7 +27,7 @@ module HexpUI
     end
 
     def form_class
-      Class.new(Form).tap do |klz|
+      Class.new(parent_class).tap do |klz|
         klz.elements = @elements
       end
     end
