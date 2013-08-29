@@ -10,3 +10,5 @@ require 'hexp_ui/widget'
 require 'hexp_ui/form'
 require 'hexp_ui/form_builder'
 require 'hexp_ui/menu'
+
+require 'hexp_ui/page'
