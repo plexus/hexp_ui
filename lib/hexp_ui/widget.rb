@@ -28,6 +28,10 @@ module HexpUI
           widget.contents = contents
         end
       end
+
+      def handlebars
+        Handlebars::Collector.new(&lookup_template).call
+      end
     end
 
     attr_reader :options
